@@ -13,8 +13,8 @@ Note that Elon's capital will be $33B.
 """
 
 ### all your code below ###
-r_10 = 4.32
-r_20 = 3.96
+r_10 = 3.96
+r_20 = 4.32
 p = 33000000000  # Elon's capital
 n_10 = 10
 n_20 = 20

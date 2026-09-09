@@ -17,6 +17,4 @@ for i in range(0,len(new_list)):
 # do it this way...
 for element in new_list:
     print(element)
-
-
-
+    
