@@ -2,6 +2,7 @@ import numpy as np
 import os
 import math
 import sys
+from pathlib import Path
 
 
 def parse_tensile_file(path_to_file):
@@ -60,9 +61,9 @@ def calculate_stress(force, sample_diameter):
     :return: An array of stresses experienced by the sample in MegaPascals (MPa)
     """
 
-    ### YOUR SOLUTION FROM STEP 1 TEMPLATE HERE ###
-
-    return None
+    area = (np.pi * sample_diameter ** 2) / 4.0
+    stress = (force * 1000.0) / area
+    return stress
 
 
 def calculate_max_strength_strain(strain, stress):
@@ -75,11 +76,11 @@ def calculate_max_strength_strain(strain, stress):
     Fracture Strain: the maximum strain experienced before fracture
     """
 
-    # calculate the maximum stress experienced
-    ultimate_tensile_stress = -1
+    # The ultimate tensile strength is the maximum stress reached during the test.
+    ultimate_tensile_stress = np.max(stress)
 
-    # calculate the maximum strain experienced
-    fracture_strain = -1
+    # The fracture strain is the largest strain value reached before failure.
+    fracture_strain = np.max(strain)
 
     return ultimate_tensile_stress, fracture_strain
 
@@ -97,11 +98,12 @@ if __name__ == "__main__":
 
     ### Do not modify below this line ###
 
-    path_to_directory = "../../../data/tensile/"
-    path_to_samples = path_to_directory + material_folder + "/"
+    repo_root = Path(__file__).resolve().parents[3]
+    data_dir = repo_root / "data" / "tensile"
+    path_to_samples = data_dir / material_folder
 
     # manually parse file to get gage diameter and then calculate cross-sectional area
-    path_to_file = path_to_samples + sample_name + ".csv"
+    path_to_file = str(path_to_samples / f"{sample_name}.csv")
 
     # Step #1: Parse the file ane return based values
     # sample diameter (mm), time (s), displacement (mm), force (kN), and strain (%)

@@ -2,6 +2,7 @@ import numpy as np
 import os
 import math
 import sys
+from pathlib import Path
 
 
 def parse_tensile_file(path_to_file):
@@ -60,9 +61,9 @@ def calculate_stress(force, sample_diameter):
     :return: An array of stresses experienced by the sample in MegaPascals (MPa)
     """
 
-    ### YOUR SOLUTION FROM STEP 1 TEMPLATE HERE ###
-
-    return None
+    area = (np.pi * sample_diameter ** 2) / 4.0
+    stress = (force * 1000.0) / area
+    return stress
 
 
 def calculate_max_strength_strain(strain, stress):
@@ -75,9 +76,10 @@ def calculate_max_strength_strain(strain, stress):
     Fracture Strain: the maximum strain experienced before fracture
     """
 
-    ### YOUR SOLUTION FROM STEP 2 TEMPLATE HERE ###
+    ultimate_tensile_stress = np.max(stress)
+    fracture_strain = np.max(strain)
+    return ultimate_tensile_stress, fracture_strain
 
-    return -1, -1
 
 def calculate_elastic_modulus(strain, stress):
     """
@@ -91,14 +93,22 @@ def calculate_elastic_modulus(strain, stress):
         intercept: y-intercept for linear region best fit of strain/stress data
     """
 
-    # dummy variables the function should over write
     linear_index = None
     slope = None
     intercept = None
 
-    ### YOUR SOLUTION FROM STEP 3 TEMPLATE HERE ###
+    peak_stress = np.max(stress)
+    target_stress = 0.4 * peak_stress
+    diffs = np.abs(stress - target_stress)
+    linear_index = int(np.argmin(diffs))
+
+    linear_stress = stress[:linear_index]
+    linear_strain = strain[:linear_index]
+
+    slope, intercept = np.polyfit(linear_strain, linear_stress, 1)
 
     return linear_index, slope, intercept
+
 
 def calculate_percent_offset(slope, strain, stress):
     """
@@ -111,18 +121,10 @@ def calculate_percent_offset(slope, strain, stress):
     offset_line: the y-values for the 0.2% offset line
     intercept_index: The index where the offset line and the strain line intersect
     """
-    # set the desired offset for the line
     offset = 0.002
-
-    # calculate the offset line: y=m(x-0.002) + 0
-    offset_line = None
-
-    # measure distance from all points on graph to this line. Consider using the
-    # abs() method to ensure values are positive
-    distance = None
-
-    # use argmin to find the index where the distance is minimal
-    intercept_index = -1
+    offset_line = slope * (strain - offset)
+    distance = np.abs(stress - offset_line)
+    intercept_index = int(np.argmin(distance))
 
     return offset_line, intercept_index
 
@@ -138,11 +140,12 @@ if __name__ == "__main__":
 
     ### Do not modify below this line ###
 
-    path_to_directory = "../../../data/tensile/"
-    path_to_samples = path_to_directory + material_folder + "/"
+    repo_root = Path(__file__).resolve().parents[3]
+    data_dir = repo_root / "data" / "tensile"
+    path_to_samples = data_dir / material_folder
 
     # manually parse file to get gage diameter and then calculate cross-sectional area
-    path_to_file = path_to_samples + sample_name + ".csv"
+    path_to_file = str(path_to_samples / f"{sample_name}.csv")
 
     # Step #1: Parse the file ane return based values
     # sample diameter (mm), time (s), displacement (mm), force (kN), and strain (%)

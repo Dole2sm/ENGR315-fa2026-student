@@ -2,6 +2,7 @@ import numpy as np
 import os
 import math
 import sys
+from pathlib import Path
 
 
 def parse_tensile_file(path_to_file):
@@ -60,17 +61,12 @@ def calculate_stress(force, sample_diameter):
     :return: An array of stresses experienced by the sample in MegaPascals (MPa)
     """
 
-    # calculate the cross-section area (mm^2)
-    ### your code here ###
+    # Cross-sectional area of a circular specimen in mm^2
+    area = (np.pi * sample_diameter ** 2) / 4.0
 
-    # calculate stress (MPa) from load (kN) and cross-sectional area
-    ### your code here ###
-
-    # delete this line and replace it with your own
-    stress = None
-
+    # Force is in kN, convert to N before dividing by area (mm^2)
+    stress = (force * 1000.0) / area
     return stress
-
 
 
 if __name__ == "__main__":
@@ -82,14 +78,13 @@ if __name__ == "__main__":
     # modify this line to select different samples in the material folder
     sample_name = "C01A1045CR_1"
 
-
-    ### Do not modify below this line ###
-
-    path_to_directory = "../../../data/tensile/"
-    path_to_samples = path_to_directory + material_folder + "/"
+    # Build the path relative to this script so it works in VS Code and from any working directory
+    repo_root = Path(__file__).resolve().parents[3]
+    data_dir = repo_root / "data" / "tensile"
+    path_to_samples = data_dir / material_folder
 
     # manually parse file to get gage diameter and then calculate cross-sectional area
-    path_to_file = path_to_samples + sample_name + ".csv"
+    path_to_file = str(path_to_samples / f"{sample_name}.csv")
 
     # Step #1: Parse the file ane return based values
     # sample diameter (mm), time (s), displacement (mm), force (kN), and strain (%)
