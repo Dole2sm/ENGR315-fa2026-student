@@ -25,9 +25,7 @@ def load_tensile_data(_path: str):
     :return: A DataFrame with one row per sample
     """
 
-    # YOUR CODE HERE #
-
-    return None
+    return pd.read_csv(_path)
 
 
 def select_material(_df, _material: str):
@@ -38,9 +36,7 @@ def select_material(_df, _material: str):
     :return: A DataFrame that only contains the rows for that material. All columns are kept.
     """
 
-    # YOUR CODE HERE #
-
-    return None
+    return _df[_df['Material_Type'] == _material].copy()
 
 
 def select_strong(_df, _material: str, _min_yield: float):
@@ -53,9 +49,7 @@ def select_strong(_df, _material: str, _min_yield: float):
     :return: A DataFrame with the rows that meet both conditions. All columns are kept.
     """
 
-    # YOUR CODE HERE #
-
-    return None
+    return _df[(_df['Material_Type'] == _material) & (_df['Yield_Strength'] > _min_yield)].copy()
 
 
 def get_values(_df, _material: str, _column: str):
@@ -67,9 +61,7 @@ def get_values(_df, _material: str, _column: str):
     :return: A Numpy array (not a Pandas Series) of the values, in the same order as the DataFrame
     """
 
-    # YOUR CODE HERE #
-
-    return None
+    return _df[_df['Material_Type'] == _material][_column].to_numpy()
 
 
 def material_statistics(_df, _material: str, _column: str):
@@ -82,9 +74,8 @@ def material_statistics(_df, _material: str, _column: str):
     :return: A tuple of (mean, standard deviation)
     """
 
-    # YOUR CODE HERE #
-
-    return None
+    values = get_values(_df, _material, _column)
+    return float(np.mean(values)), float(np.std(values, ddof=1))
 
 
 def summary_table(_df, _columns: list):
@@ -98,9 +89,13 @@ def summary_table(_df, _columns: list):
              {'PMMA': {'Elastic_Modulus': (3.09, 0.2), 'Yield_Strength': (49.41, 3.04)}, ...}
     """
 
-    # YOUR CODE HERE #
-
-    return None
+    table = {}
+    for material in _df['Material_Type'].unique():
+        material_stats = {}
+        for column in _columns:
+            material_stats[column] = material_statistics(_df, material, column)
+        table[material] = material_stats
+    return table
 
 
 if __name__ == '__main__':
