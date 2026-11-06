@@ -15,18 +15,26 @@ class EKGAnnotation:
         return
 
     def __convert_to_seconds__(self, time):
-        # find all the colons
-        elements = time.split(":")
+        if time is None:
+            return 0.0
 
-        # convert into seconds
+        if isinstance(time, (int, float)):
+            return float(time)
+
+        elements = str(time).split(":")
+
         if len(elements) == 2:
             minutes = float(elements[0]) * 60
             seconds = float(elements[1])
+            return minutes + seconds
 
-            return minutes * 60 + seconds
+        if len(elements) == 3:
+            hours = float(elements[0]) * 3600
+            minutes = float(elements[1]) * 60
+            seconds = float(elements[2])
+            return hours + minutes + seconds
 
-        # default handler
-        return time
+        return float(time)
 
 
 class EKGTestBench:
@@ -49,34 +57,21 @@ class EKGTestBench:
         # store annotation indices as this is useful
         self.annotation_indices = list()
 
-        # open path to annotation file
-        file = open(filepath)
+        with open(filepath, "r", encoding="utf-8") as file:
+            for line in file:
+                line = line.replace("\t", " ")
+                values = line.strip().split()
 
-        # parse each line individually
-        for line in file:
-            line = line.replace("\t", " ")
-            elements = line.rstrip().split(" ")
-
-            values = list()
-            for e in elements:
-                if e == '':
+                if len(values) < 6:
                     continue
-                else:
-                    values.append(e)
 
-            # check to see if an optional rhythm is present
-            rhythm = ''
-            if len(values) == 7:
-                rhythm = values[6]
+                rhythm = ''
+                if len(values) >= 7:
+                    rhythm = values[6]
 
-            # create an annotation object
-            ann = EKGAnnotation(values[0], values[1], values[2], values[3], values[4], values[5], rhythm)
-
-            # store object in own list and indices in another
-            self.annotations.append(ann)
-            self.annotation_indices.append(ann.sample)
-
-        file.close()
+                ann = EKGAnnotation(values[0], values[1], values[2], values[3], values[4], values[5], rhythm)
+                self.annotations.append(ann)
+                self.annotation_indices.append(ann.sample)
 
     def generate_stats(self, detector_responses):
 

@@ -1,53 +1,61 @@
 import numpy as np
+from scipy import signal as sig
+from scipy.signal import find_peaks
+
 from ekg_testbench import EKGTestBench
+
 
 def detect_heartbeats(filepath):
     """
-    Perform analysis to detect location of heartbeats
-    :param filepath: A valid path to a CSV file of heart beats
-    :return: signal: a signal that will be plotted
+    Perform analysis to detect location of heartbeats.
+    :param filepath: A valid path to a CSV file of heartbeats
+    :return: processed_signal: the signal used for peak detection
     beats: the indices of detected heartbeats
     """
     if filepath == '':
-        return list()
+        return [], []
 
-    # import the CSV file using numpy
-    path = filepath
+    try:
+        data = np.genfromtxt(filepath, delimiter=',', skip_header=2)
+    except OSError:
+        return [], []
 
-    # load data in matrix from CSV file; skip first two rows
-    ## your code here
+    if data.size == 0:
+        return [], []
 
-    # save each vector as own variable
-    ## your code here
+    if data.ndim == 1:
+        data = data.reshape(1, -1)
 
-    # identify one column to process. Call that column signal
+    if data.shape[1] < 2:
+        return [], []
 
-    signal = -1 ## your code here
+    signal = data[:, 1].astype(float)
+    signal = signal - np.mean(signal)
 
-    # pass data through LOW PASS FILTER (OPTIONAL)
-    ## your code here
+    sample_rate = 300.0
+    low_pass = sig.butter(4, 15 / (sample_rate / 2.0), btype='low', output='ba')
+    low_filtered = sig.filtfilt(low_pass[0], low_pass[1], signal)
 
-    # pass data through HIGH PASS FILTER (OPTIONAL) to create BAND PASS result
-    ## your code here
+    high_pass = sig.butter(4, 0.5 / (sample_rate / 2.0), btype='high', output='ba')
+    band_pass = sig.filtfilt(high_pass[0], high_pass[1], low_filtered)
 
-    # pass data through differentiator
-    ## your code here
+    derivative = np.diff(band_pass, prepend=band_pass[0])
+    squared = derivative ** 2
 
-    # pass data through square function
-    ## your code here
+    window_size = int(round(0.15 * sample_rate))
+    if window_size < 1:
+        window_size = 1
 
-    # pass through moving average window
-    ## your code here
+    moving_average = np.convolve(squared, np.ones(window_size) / window_size, mode='same')
 
-    # use find_peaks to identify peaks within averaged/filtered data
-    # save the peaks result and return as part of testbench result
+    peak_threshold = np.max(moving_average) * 0.20
+    peaks, _ = find_peaks(
+        moving_average,
+        distance=int(round(0.35 * sample_rate)),
+        prominence=peak_threshold,
+    )
 
-    ## your code here peaks,_ = find_peaks(....)
-
-    beats = None
-
-    # do not modify this line
-    return signal, beats
+    return moving_average, peaks
 
 
 # when running this file directly, this will execute first
