@@ -74,41 +74,29 @@ class EKGTestBench:
                 self.annotation_indices.append(ann.sample)
 
     def generate_stats(self, detector_responses):
-
-        # double check that responses are sorted; do not assume
-        detector_responses.sort()
+        responses = sorted(detector_responses)
 
         # acceptable solutions are within 5% of the annotation
         delta = 90
 
-        # pair of responses and annotations that have been acceptable matched
-        matched = list()
+        matched = []
+        unmatched = []
+        remaining = self.annotations.copy()
 
-        # responses that were unmatched to an annotation
-        unmatched = list()
+        for r in responses:
+            matched_annotation = None
 
-        # create copy of annotations list so we can modify
-        annotations = self.annotations.copy()
-
-        # go through the response list
-        for r in detector_responses:
-            annotation_to_be_removed = None
-
-            # for this response, search through annotations for a match within delta
-            for a in annotations:
-
-                # this is matched positive event
+            for a in remaining:
                 if abs(r - a.sample) < delta:
-                    annotation_to_be_removed = a
+                    matched_annotation = a
                     matched.append((r, a.sample))
                     break
 
-                # event is unmatched in list, stop scanning
                 if a.sample > r + delta:
                     unmatched.append(r)
                     break
 
-            if annotation_to_be_removed is not None:
-                annotations.remove(annotation_to_be_removed)
+            if matched_annotation is not None:
+                remaining.remove(matched_annotation)
 
-        return matched, unmatched, annotations
+        return matched, unmatched, remaining

@@ -7,10 +7,9 @@ from ekg_testbench import EKGTestBench
 
 def detect_heartbeats(filepath):
     """
-    Perform analysis to detect location of heartbeats.
-    :param filepath: A valid path to a CSV file of heartbeats
-    :return: processed_signal: the signal used for peak detection
-    beats: the indices of detected heartbeats
+    Perform a simple Pan-Tompkins-like heartbeat detection on an EKG CSV file.
+    :param filepath: Path to a CSV file with EKG data
+    :return: processed_signal, peak_indices
     """
     if filepath == '':
         return [], []
@@ -29,10 +28,20 @@ def detect_heartbeats(filepath):
     if data.shape[1] < 2:
         return [], []
 
+    time = data[:, 0].astype(float)
     signal = data[:, 1].astype(float)
     signal = signal - np.mean(signal)
 
-    sample_rate = 300.0
+    if len(time) > 1:
+        diffs = np.diff(time)
+        diffs = diffs[np.isfinite(diffs) & (diffs > 0)]
+        if diffs.size > 0:
+            sample_rate = 1.0 / np.median(diffs)
+        else:
+            sample_rate = 360.0
+    else:
+        sample_rate = 360.0
+
     low_pass = sig.butter(4, 15 / (sample_rate / 2.0), btype='low', output='ba')
     low_filtered = sig.filtfilt(low_pass[0], low_pass[1], signal)
 
@@ -42,16 +51,13 @@ def detect_heartbeats(filepath):
     derivative = np.diff(band_pass, prepend=band_pass[0])
     squared = derivative ** 2
 
-    window_size = int(round(0.15 * sample_rate))
-    if window_size < 1:
-        window_size = 1
-
+    window_size = max(int(round(0.15 * sample_rate)), 1)
     moving_average = np.convolve(squared, np.ones(window_size) / window_size, mode='same')
 
     peak_threshold = np.max(moving_average) * 0.20
     peaks, _ = find_peaks(
         moving_average,
-        distance=int(round(0.35 * sample_rate)),
+        distance=max(int(round(0.35 * sample_rate)), 1),
         prominence=peak_threshold,
     )
 
