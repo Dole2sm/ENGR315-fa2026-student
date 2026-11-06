@@ -74,29 +74,27 @@ class EKGTestBench:
                 self.annotation_indices.append(ann.sample)
 
     def generate_stats(self, detector_responses):
-        responses = sorted(detector_responses)
-
-        # acceptable solutions are within 5% of the annotation
+        responses = sorted(int(r) for r in detector_responses)
         delta = 90
 
         matched = []
         unmatched = []
         remaining = self.annotations.copy()
 
-        for r in responses:
-            matched_annotation = None
+        for response in responses:
+            best_index = None
+            best_distance = None
 
-            for a in remaining:
-                if abs(r - a.sample) < delta:
-                    matched_annotation = a
-                    matched.append((r, a.sample))
-                    break
+            for index, annotation in enumerate(remaining):
+                distance = abs(response - annotation.sample)
+                if distance < delta and (best_distance is None or distance < best_distance):
+                    best_distance = distance
+                    best_index = index
 
-                if a.sample > r + delta:
-                    unmatched.append(r)
-                    break
-
-            if matched_annotation is not None:
-                remaining.remove(matched_annotation)
+            if best_index is not None:
+                annotation = remaining.pop(best_index)
+                matched.append((response, annotation.sample))
+            else:
+                unmatched.append(response)
 
         return matched, unmatched, remaining
