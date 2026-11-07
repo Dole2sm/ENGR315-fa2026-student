@@ -5,16 +5,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import ttest_1samp, norm, chisquare, t, sem
 
-# Run this file from Exams/Assignment 2 - RSI Data, as required by the assignment.
+
 df = pd.read_csv('../../data/drop-jump/all_participant_data_rsi.csv')
 alpha = 0.05
 
-# Module 4 pandas-demo.py shows how to select columns and convert to arrays.
 force_plate_rsi = df['force_plate_rsi'].to_numpy()
 accel_rsi = df['accelerometer_rsi'].to_numpy()
 
-# Task 1: a paired t-test is a one-sample t-test of the paired differences.
-# Module 4 hypothesis-test.py demonstrates the two-sided one-sample test.
+# Task 1: a paired t-test is a one-sample t-test of the paired differences
 difference = force_plate_rsi - accel_rsi
 t_value, p_value = ttest_1samp(difference, popmean=0, alternative='two-sided')
 
@@ -35,8 +33,8 @@ else:
 # Task 2: follow Module 5 distribution-fit.py and chi-square-dist-fit.py.
 fitted_mean, fitted_std = norm.fit(accel_rsi)
 
-# Use wider tail bins than the lecture example because this sample is smaller.
-# All bin boundaries adapt to the fitted mean and standard deviation.
+# Chose yo use wider tail bins than the lecture example because this sample is smaller
+# bin boundaries adapt to the fitted mean and standard deviation
 bins = np.linspace(fitted_mean - 1.5 * fitted_std,
                    fitted_mean + 1.5 * fitted_std, 7)
 bins = np.r_[-np.inf, bins, np.inf]
@@ -52,8 +50,8 @@ print('Fitted mean:', fitted_mean, 'fitted standard deviation:', fitted_std)
 print('Observed counts:', observed_counts)
 print('Expected counts:', expected_counts)
 
-# Two degrees of freedom are deducted for the fitted mean and standard deviation.
-# Check the expected counts before interpreting the chi-square approximation.
+# Two degrees of freedom subtracted for fitted mean and stdev
+# check expected counts before interpreting the chi-square approximation
 if min(expected_counts) >= 5:
     chi_stat, p_value = chisquare(observed_counts, f_exp=expected_counts, ddof=2)
     print('Chi-square statistic:', chi_stat, 'p-value:', p_value)
@@ -65,7 +63,7 @@ if min(expected_counts) >= 5:
 else:
     print('Expected counts are too small. Use fewer bins before interpreting the test.')
 
-# Module 5 histogram-dist.py overlays a density histogram and a normal PDF.
+
 plt.hist(accel_rsi, bins=9, density=True, edgecolor='k',
          label='Accelerometer RSI')
 x = np.linspace(min(accel_rsi), max(accel_rsi), 100)
@@ -76,7 +74,7 @@ plt.ylabel('Probability density')
 plt.title('Accelerometer RSI with Fitted Normal Distribution')
 plt.legend()
 
-# Task 3: use string splitting, lists, and the Module 4 Boolean DataFrame filter.
+# Task 3: use string splitting, lists, and the Boolean DataFrame filter
 participants = []
 for trial in df['trial']:
     participants.append(trial.split('_')[0])
@@ -89,7 +87,6 @@ print(participant_f)
 force_f = participant_f['force_plate_rsi'].to_numpy()
 accel_f = participant_f['accelerometer_rsi'].to_numpy()
 
-# Follow the confidence interval example in Module 4 hypothesis-test.py.
 force_lower, force_upper = t.interval(
     confidence=0.95, df=len(force_f) - 1,
     loc=np.mean(force_f), scale=sem(force_f))
